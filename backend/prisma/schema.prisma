@@ -1,0 +1,266 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  HR
+  EMPLOYEE
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+}
+
+enum LeaveType {
+  SICK
+  CASUAL
+  EARNED
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LATE
+}
+
+enum PayrollStatus {
+  PROCESSED
+  PAID
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  role       Role
+  employee   Employee?
+  refreshToken RefreshToken?
+  auditLogs  AuditLog[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+}
+
+model Department {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // employees Employee[] // Optional: Linking strictly later
+}
+
+model Employee {
+  id            String          @id @default(uuid())
+  firstName     String
+  lastName      String
+  email         String          @unique
+  phone         String
+  designation   String
+  department    String
+  joiningDate   DateTime
+  salary        Decimal
+  status        EmployeeStatus  @default(ACTIVE)
+  
+  userId        String?         @unique
+  user          User?           @relation(fields: [userId], references: [id])
+  
+  managerId     String?
+  manager       Employee?       @relation("ManagerSubordinates", fields: [managerId], references: [id])
+  subordinates  Employee[]      @relation("ManagerSubordinates")
+  
+  leaveRequests LeaveRequest[]
+  leaveBalance  LeaveBalance?
+  attendance    Attendance[]
+  attendanceRecords AttendanceRecord[]
+  salaryComponents  EmployeeSalaryComponent[]
+  payslips          Payslip[]
+  payroll       Payroll[]
+  
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String
+  entityId    String
+  entityType  String
+  performedBy String
+  user        User     @relation(fields: [performedBy], references: [id])
+  timestamp   DateTime @default(now())
+}
+
+model LeaveRequest {
+  id              String      @id @default(uuid())
+  employeeId      String
+  employee        Employee    @relation(fields: [employeeId], references: [id])
+  leaveType       LeaveType
+  startDate       DateTime
+  endDate         DateTime
+  reason          String
+  status          LeaveStatus @default(PENDING)
+  approverId      String?
+  rejectionReason String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model LeaveBalance {
+  id          String   @id @default(uuid())
+  employeeId  String   @unique
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  year        Int
+  sickLeave   Int      @default(0)
+  casualLeave Int      @default(0)
+  earnedLeave Int      @default(0)
+}
+
+model Attendance {
+  id          String           @id @default(uuid())
+  employeeId  String
+  employee    Employee         @relation(fields: [employeeId], references: [id])
+  date        DateTime
+  checkIn     DateTime?
+  checkOut    DateTime?
+  status      AttendanceStatus
+  totalHours  Float?
+  isManual    Boolean          @default(false)
+  remarks     String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+// ... existing models ...
+
+// --- SSG: Salary Slip Generation Models ---
+
+model SalaryComponent {
+  id          String   @id @default(uuid())
+  name        String
+  type        SalaryComponentType
+  isFixed     Boolean  @default(true)
+  percentage  Float?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  employeeStructures EmployeeSalaryComponent[]
+}
+
+model EmployeeSalaryComponent {
+  id          String   @id @default(uuid())
+  employeeId  String
+  componentId String
+  amount      Float
+  
+  employee    Employee        @relation(fields: [employeeId], references: [id])
+  component   SalaryComponent @relation(fields: [componentId], references: [id])
+}
+
+model PayrollRun {
+  id        String        @id @default(uuid())
+  month     Int
+  year      Int
+  status    PayrollStatus
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  
+  payslips  Payslip[]
+}
+
+model Payslip {
+  id           String     @id @default(uuid())
+  payrollRunId String
+  employeeId   String
+  basicSalary  Float
+  allowances   Float
+  deductions   Float
+  netPay       Float
+  details      Json
+  pdfPath      String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  payrollRun   PayrollRun @relation(fields: [payrollRunId], references: [id])
+  employee     Employee   @relation(fields: [employeeId], references: [id])
+}
+
+enum SalaryComponentType {
+  EARNING
+  DEDUCTION
+}
+
+
+model Payroll {
+  id          String        @id @default(uuid())
+  employeeId  String
+  employee    Employee      @relation(fields: [employeeId], references: [id])
+  month       Int
+  year        Int
+  basicSalary Decimal
+  allowances  Decimal
+  deductions  Decimal
+  netSalary   Decimal
+  status      PayrollStatus
+  paymentDate DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model LeavePolicy {
+  id                String    @id @default(uuid())
+  leaveType         LeaveType @unique
+  maxDaysPerYear    Int
+  carryForwardLimit Int
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model Holiday {
+  id          String   @id @default(uuid())
+  name        String
+  date        DateTime @unique
+  isRecurring Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum PunchType {
+  IN
+  OUT
+}
+
+model AttendanceRecord {
+  id          String    @id @default(uuid())
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id])
+  timestamp   DateTime
+  type        PunchType
+  device      String?
+  createdAt   DateTime  @default(now())
+}

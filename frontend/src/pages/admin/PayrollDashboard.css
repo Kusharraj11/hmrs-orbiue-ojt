@@ -1,0 +1,119 @@
+/* PayrollDashboard.css */
+.pd-container {
+    padding: 2rem;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: white;
+}
+
+.pd-header {
+    background: rgba(16, 185, 129, 0.2);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: white;
+    padding: 2.5rem;
+    border-radius: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+.pd-header h1 {
+    font-size: 2rem;
+    margin: 0;
+    font-weight: 700;
+}
+
+.pd-dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+.pd-card {
+    background: rgba(31, 41, 55, 0.4);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.pd-btn-run {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    width: 100%;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+}
+
+.pd-btn-run:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4);
+}
+
+.pd-btn-run:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: #9CA3AF;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.pd-select-group {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.pd-select-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #D1D5DB;
+}
+
+.pd-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(17, 24, 39, 0.6);
+    color: white;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+
+.pd-select:focus {
+    outline: none;
+    border-color: #10b981;
+}
+
+.pd-success-message {
+    text-align: center;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
